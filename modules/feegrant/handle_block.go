@@ -5,7 +5,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegranttypes "cosmossdk.io/x/feegrant"
 	juno "github.com/forbole/juno/v5/types"
 
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -20,7 +20,7 @@ func (m *Module) HandleBlock(
 ) error {
 
 	// Remove expired fee grant allowances
-	err := m.removeExpiredFeeGrantAllowances(block.Block.Height, res.EndBlockEvents)
+	err := m.removeExpiredFeeGrantAllowances(block.Block.Height, res.FinalizeBlockEvents)
 	if err != nil {
 		fmt.Printf("Error when removing expired fee grant allowance, error: %s", err)
 	}

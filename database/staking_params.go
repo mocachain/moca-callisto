@@ -11,7 +11,7 @@ import (
 )
 
 // SaveStakingParams allows to store the given params into the database
-func (db *Db) SaveStakingParams(params types.StakingParams) error {
+func (db *DB) SaveStakingParams(params types.StakingParams) error {
 	paramsBz, err := json.Marshal(&params.Params)
 	if err != nil {
 		return fmt.Errorf("error while marshaling staking params: %s", err)
@@ -34,7 +34,7 @@ WHERE staking_params.height <= excluded.height`
 }
 
 // GetStakingParams returns the types.StakingParams instance containing the current params
-func (db *Db) GetStakingParams() (*types.StakingParams, error) {
+func (db *DB) GetStakingParams() (*types.StakingParams, error) {
 	var rows []dbtypes.StakingParamsRow
 	stmt := `SELECT * FROM staking_params LIMIT 1`
 	err := db.Sqlx.Select(&rows, stmt)

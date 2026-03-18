@@ -11,7 +11,7 @@ import (
 )
 
 // GetTokensPriceID returns the slice of price ids for all tokens stored in db
-func (db *Db) GetTokensPriceID() ([]string, error) {
+func (db *DB) GetTokensPriceID() ([]string, error) {
 	query := `SELECT * FROM token_unit`
 
 	var dbUnits []dbtypes.TokenUnitRow
@@ -33,7 +33,7 @@ func (db *Db) GetTokensPriceID() ([]string, error) {
 // --------------------------------------------------------------------------------------------------------------------
 
 // SaveToken allows to save the given token details
-func (db *Db) SaveToken(token types.Token) error {
+func (db *DB) SaveToken(token types.Token) error {
 	query := `INSERT INTO token (name) VALUES ($1) ON CONFLICT DO NOTHING`
 	_, err := db.SQL.Exec(query, token.Name)
 	if err != nil {
@@ -63,7 +63,7 @@ func (db *Db) SaveToken(token types.Token) error {
 // --------------------------------------------------------------------------------------------------------------------
 
 // SaveTokensPrices allows to save the given prices as the most updated ones
-func (db *Db) SaveTokensPrices(prices []types.TokenPrice) error {
+func (db *DB) SaveTokensPrices(prices []types.TokenPrice) error {
 	if len(prices) == 0 {
 		return nil
 	}
@@ -94,7 +94,7 @@ WHERE token_price.timestamp <= excluded.timestamp`
 }
 
 // SaveTokenPricesHistory stores the given prices as historic ones
-func (db *Db) SaveTokenPricesHistory(prices []types.TokenPrice) error {
+func (db *DB) SaveTokenPricesHistory(prices []types.TokenPrice) error {
 	if len(prices) == 0 {
 		return nil
 	}

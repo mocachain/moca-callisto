@@ -1,10 +1,10 @@
 .idea/
 build/
 
-# Configuration
-*.toml
-*.json
-config.yaml
-
 # Coverage
 coverage.*
+.DS_Store
+deployment/*/bdjuno.log
+deployment/*/data
+callisto.session.sql
+.env

@@ -1,15 +1,26 @@
 package coingecko
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/forbole/bdjuno/v4/types"
 )
+
+const (
+	coingeckoRequestTimeout  = 10 * time.Second
+	coingeckoMaxResponseSize = 2 << 20 // 2 MiB
+)
+
+var coingeckoHTTPClient = &http.Client{
+	Timeout: coingeckoRequestTimeout,
+}
 
 // GetCoinsList allows to fetch from the remote APIs the list of all the supported tokens
 func GetCoinsList() (coins Tokens, err error) {
@@ -44,19 +55,26 @@ func ConvertCoingeckoPrices(prices []MarketTicker) []types.TokenPrice {
 
 // queryCoinGecko queries the CoinGecko APIs for the given endpoint
 func queryCoinGecko(endpoint string, ptr interface{}) error {
-	resp, err := http.Get("https://api.coingecko.com/api/v3" + endpoint)
+	ctx, cancel := context.WithTimeout(context.Background(), coingeckoRequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://api.coingecko.com/api/v3"+endpoint, nil)
 	if err != nil {
 		return err
 	}
 
+	resp, err := coingeckoHTTPClient.Do(req)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
-	bz, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("error while reading response body: %s", err)
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("coingecko returned non-success status: %d", resp.StatusCode)
 	}
 
-	err = json.Unmarshal(bz, &ptr)
+	decoder := json.NewDecoder(io.LimitReader(resp.Body, coingeckoMaxResponseSize))
+	err = decoder.Decode(ptr)
 	if err != nil {
 		return fmt.Errorf("error while unmarshaling response body: %s", err)
 	}

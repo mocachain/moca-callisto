@@ -2,9 +2,9 @@ package types
 
 import (
 	"database/sql"
-	"strconv"
+	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 )
 
 // ValidatorData contains all the data of a single validator.
@@ -55,23 +55,21 @@ func (v ValidatorData) GetSelfDelegateAddress() string {
 }
 
 // GetMaxChangeRate implements types.Validator
-func (v ValidatorData) GetMaxChangeRate() *sdk.Dec {
-	n, err := strconv.ParseInt(v.MaxChangeRate, 10, 64)
+func (v ValidatorData) GetMaxChangeRate() (*sdkmath.LegacyDec, error) {
+	result, err := sdkmath.LegacyNewDecFromStr(v.MaxChangeRate)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("invalid max_change_rate %q: %w", v.MaxChangeRate, err)
 	}
-	result := sdk.NewDec(n)
-	return &result
+	return &result, nil
 }
 
 // GetMaxRate implements types.Validator
-func (v ValidatorData) GetMaxRate() *sdk.Dec {
-	n, err := strconv.ParseInt(v.MaxRate, 10, 64)
+func (v ValidatorData) GetMaxRate() (*sdkmath.LegacyDec, error) {
+	result, err := sdkmath.LegacyNewDecFromStr(v.MaxRate)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("invalid max_rate %q: %w", v.MaxRate, err)
 	}
-	result := sdk.NewDec(n)
-	return &result
+	return &result, nil
 }
 
 // GetHeight implements types.Validator

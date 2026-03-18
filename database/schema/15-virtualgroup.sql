@@ -1,0 +1,60 @@
+-- global_virtual_group_families
+CREATE TABLE global_virtual_group_families (
+    id SERIAL PRIMARY KEY,
+    global_virtual_group_family_id INT NOT NULL,
+    primary_sp_id INT NOT NULL,
+    global_virtual_group_ids TEXT,
+    virtual_payment_address TEXT NOT NULL,
+    create_at BIGINT,
+    create_tx_hash TEXT NOT NULL,
+    create_evm_tx_hash TEXT NOT NULL,
+    create_time TIMESTAMPTZ,
+    update_at BIGINT,
+    update_tx_hash TEXT NOT NULL,
+    update_evm_tx_hash TEXT NOT NULL,
+    update_time TIMESTAMPTZ,
+    removed BOOLEAN DEFAULT FALSE,
+    UNIQUE (global_virtual_group_family_id),
+    CONSTRAINT fk_spid FOREIGN KEY (primary_sp_id) REFERENCES storage_providers(sp_id)
+);
+-- global_virtual_groups
+CREATE TABLE global_virtual_groups (
+    id SERIAL PRIMARY KEY,
+    global_virtual_group_id INT NOT NULL,
+    family_id INT NOT NULL,
+    primary_sp_id INT NOT NULL,
+    secondary_sp_ids TEXT,
+    stored_size BIGINT NOT NULL,
+    virtual_payment_address TEXT,
+    total_deposit TEXT,
+    create_at BIGINT NOT NULL,
+    create_tx_hash TEXT NOT NULL,
+    create_evm_tx_hash TEXT NOT NULL,
+    create_time TIMESTAMPTZ NOT NULL,
+    update_at BIGINT NOT NULL,
+    update_tx_hash TEXT NOT NULL,
+    update_evm_tx_hash TEXT NOT NULL,
+    update_time TIMESTAMPTZ NOT NULL,
+    removed BOOLEAN DEFAULT FALSE,
+    UNIQUE (global_virtual_group_id),
+    CONSTRAINT fk_primary_spid FOREIGN KEY (primary_sp_id) REFERENCES storage_providers(sp_id),
+    CONSTRAINT fk_family_id FOREIGN KEY (family_id) REFERENCES global_virtual_group_families(global_virtual_group_family_id)
+);
+CREATE TABLE local_virtual_groups (
+    id SERIAL PRIMARY KEY,
+    local_virtual_group_id INT NOT NULL,
+    global_virtual_group_id INT NOT NULL,
+    bucket_id INT NOT NULL,
+    stored_size BIGINT,
+    create_at BIGINT,
+    create_tx_hash TEXT NOT NULL,
+    create_evm_tx_hash TEXT NOT NULL,
+    create_time TIMESTAMPTZ,
+    update_at BIGINT,
+    update_tx_hash TEXT NOT NULL,
+    update_evm_tx_hash TEXT NOT NULL,
+    update_time TIMESTAMPTZ,
+    removed BOOLEAN DEFAULT FALSE,
+    UNIQUE (global_virtual_group_id),
+    UNIQUE (bucket_id, local_virtual_group_id)
+);

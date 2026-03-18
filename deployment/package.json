@@ -1,0 +1,17 @@
+{
+  "name": "callisto",
+  "version": "1.0.0",
+  "description": "test",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/client": "^3.11.4",
+    "@apollo/datasource-rest": "^6.3.0",
+    "graphql": "^16.9.0",
+    "react": "^18.3.1"
+  }
+}

@@ -10,15 +10,14 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	dbtypes "github.com/forbole/bdjuno/v4/database/types"
 	"github.com/forbole/bdjuno/v4/types"
 	"github.com/lib/pq"
 )
 
 // SaveGovParams saves the given x/gov parameters inside the database
-func (db *Db) SaveGovParams(params *types.GovParams) error {
-
+func (db *DB) SaveGovParams(params *types.GovParams) error {
 	depositParamsBz, err := json.Marshal(&params.DepositParams)
 	if err != nil {
 		return fmt.Errorf("error while marshaling deposit params: %s", err)
@@ -52,8 +51,7 @@ WHERE gov_params.height <= excluded.height`
 }
 
 // SaveGenesisGovParams saves the genesis x/gov parameters inside the database
-func (db *Db) SaveGenesisGovParams(params *types.GenesisGovParams) error {
-
+func (db *DB) SaveGenesisGovParams(params *types.GenesisGovParams) error {
 	depositParamsBz, err := json.Marshal(&params.DepositParams)
 	if err != nil {
 		return fmt.Errorf("error while marshaling genesis deposit params: %s", err)
@@ -87,7 +85,7 @@ WHERE gov_params.height <= excluded.height`
 }
 
 // GetGovParams returns the most recent governance parameters
-func (db *Db) GetGovParams() (*types.GovParams, error) {
+func (db *DB) GetGovParams() (*types.GovParams, error) {
 	var rows []dbtypes.GovParamsRow
 	err := db.Sqlx.Select(&rows, `SELECT * FROM gov_params`)
 	if err != nil {
@@ -127,7 +125,7 @@ func (db *Db) GetGovParams() (*types.GovParams, error) {
 // --------------------------------------------------------------------------------------------------------------------
 
 // SaveProposals allows to save for the given height the given total amount of coins
-func (db *Db) SaveProposals(proposals []types.Proposal) error {
+func (db *DB) SaveProposals(proposals []types.Proposal) error {
 	if len(proposals) == 0 {
 		return nil
 	}
@@ -200,7 +198,7 @@ INSERT INTO proposal(
 }
 
 // GetProposal returns the proposal with the given id, or nil if not found
-func (db *Db) GetProposal(id uint64) (types.Proposal, error) {
+func (db *DB) GetProposal(id uint64) (types.Proposal, error) {
 	var rows []*dbtypes.ProposalRow
 	err := db.Sqlx.Select(&rows, `SELECT * FROM proposal WHERE id = $1`, id)
 	if err != nil {
@@ -241,7 +239,7 @@ func (db *Db) GetProposal(id uint64) (types.Proposal, error) {
 }
 
 // GetOpenProposalsIds returns all the ids of the proposals that are in deposit or voting period at the given block time
-func (db *Db) GetOpenProposalsIds(blockTime time.Time) ([]uint64, error) {
+func (db *DB) GetOpenProposalsIds(blockTime time.Time) ([]uint64, error) {
 	var ids []uint64
 	stmt := `SELECT id FROM proposal WHERE status = $1 OR status = $2`
 	err := db.Sqlx.Select(&ids, stmt, govtypesv1.StatusDepositPeriod.String(), govtypesv1.StatusVotingPeriod.String())
@@ -261,7 +259,7 @@ func (db *Db) GetOpenProposalsIds(blockTime time.Time) ([]uint64, error) {
 // --------------------------------------------------------------------------------------------------------------------
 
 // UpdateProposal updates a proposal stored inside the database
-func (db *Db) UpdateProposal(update types.ProposalUpdate) error {
+func (db *DB) UpdateProposal(update types.ProposalUpdate) error {
 	query := `UPDATE proposal SET status = $1, voting_start_time = $2, voting_end_time = $3 where id = $4`
 	_, err := db.SQL.Exec(query,
 		update.Status,
@@ -277,7 +275,7 @@ func (db *Db) UpdateProposal(update types.ProposalUpdate) error {
 }
 
 // SaveDeposits allows to save multiple deposits
-func (db *Db) SaveDeposits(deposits []types.Deposit) error {
+func (db *DB) SaveDeposits(deposits []types.Deposit) error {
 	if len(deposits) == 0 {
 		return nil
 	}
@@ -321,7 +319,7 @@ WHERE proposal_deposit.height <= excluded.height`
 // --------------------------------------------------------------------------------------------------------------------
 
 // SaveVote allows to save for the given height and the message vote
-func (db *Db) SaveVote(vote types.Vote) error {
+func (db *DB) SaveVote(vote types.Vote) error {
 	query := `
 INSERT INTO proposal_vote (proposal_id, voter_address, option, timestamp, height)
 VALUES ($1, $2, $3, $4, $5)
@@ -346,7 +344,7 @@ WHERE proposal_vote.height <= excluded.height`
 }
 
 // SaveTallyResults allows to save for the given height the given total amount of coins
-func (db *Db) SaveTallyResults(tallys []types.TallyResult) error {
+func (db *DB) SaveTallyResults(tallys []types.TallyResult) error {
 	if len(tallys) == 0 {
 		return nil
 	}
@@ -386,7 +384,7 @@ WHERE proposal_tally_result.height <= excluded.height`
 // --------------------------------------------------------------------------------------------------------------------
 
 // SaveProposalStakingPoolSnapshot allows to save the given snapshot of the staking pool
-func (db *Db) SaveProposalStakingPoolSnapshot(snapshot types.ProposalStakingPoolSnapshot) error {
+func (db *DB) SaveProposalStakingPoolSnapshot(snapshot types.ProposalStakingPoolSnapshot) error {
 	stmt := `
 INSERT INTO proposal_staking_pool_snapshot (proposal_id, bonded_tokens, not_bonded_tokens, height)
 VALUES ($1, $2, $3, $4)
@@ -407,7 +405,7 @@ WHERE proposal_staking_pool_snapshot.height <= excluded.height`
 }
 
 // SaveProposalValidatorsStatusesSnapshots allows to save the given validator statuses snapshots
-func (db *Db) SaveProposalValidatorsStatusesSnapshots(snapshots []types.ProposalValidatorStatusSnapshot) error {
+func (db *DB) SaveProposalValidatorsStatusesSnapshots(snapshots []types.ProposalValidatorStatusSnapshot) error {
 	if len(snapshots) == 0 {
 		return nil
 	}
@@ -445,8 +443,7 @@ WHERE proposal_validator_status_snapshot.height <= excluded.height`
 }
 
 // SaveSoftwareUpgradePlan allows to save the given software upgrade plan with its proposal id
-func (db *Db) SaveSoftwareUpgradePlan(proposalID uint64, plan upgradetypes.Plan, height int64) error {
-
+func (db *DB) SaveSoftwareUpgradePlan(proposalID uint64, plan upgradetypes.Plan, height int64) error {
 	stmt := `
 INSERT INTO software_upgrade_plan(proposal_id, plan_name, upgrade_height, info, height)
 VALUES ($1, $2, $3, $4, $5)
@@ -467,7 +464,7 @@ WHERE software_upgrade_plan.height <= excluded.height`
 }
 
 // DeleteSoftwareUpgradePlan allows to delete a SoftwareUpgradePlan with proposal ID
-func (db *Db) DeleteSoftwareUpgradePlan(proposalID uint64) error {
+func (db *DB) DeleteSoftwareUpgradePlan(proposalID uint64) error {
 	stmt := `DELETE FROM software_upgrade_plan WHERE proposal_id = $1`
 
 	_, err := db.SQL.Exec(stmt, proposalID)
@@ -479,7 +476,7 @@ func (db *Db) DeleteSoftwareUpgradePlan(proposalID uint64) error {
 }
 
 // CheckSoftwareUpgradePlan returns true if an upgrade is scheduled at the given height
-func (db *Db) CheckSoftwareUpgradePlan(upgradeHeight int64) (bool, error) {
+func (db *DB) CheckSoftwareUpgradePlan(upgradeHeight int64) (bool, error) {
 	var exist bool
 
 	stmt := `SELECT EXISTS (SELECT 1 FROM software_upgrade_plan WHERE upgrade_height=$1)`
@@ -492,7 +489,7 @@ func (db *Db) CheckSoftwareUpgradePlan(upgradeHeight int64) (bool, error) {
 }
 
 // TruncateSoftwareUpgradePlan delete software upgrade plans once the upgrade height passed
-func (db *Db) TruncateSoftwareUpgradePlan(height int64) error {
+func (db *DB) TruncateSoftwareUpgradePlan(height int64) error {
 	stmt := `DELETE FROM software_upgrade_plan WHERE upgrade_height <= $1`
 
 	_, err := db.SQL.Exec(stmt, height)

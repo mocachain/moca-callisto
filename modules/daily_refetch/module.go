@@ -15,13 +15,13 @@ var (
 
 type Module struct {
 	node     node.Node
-	database *bdjunodb.Db
+	database *bdjunodb.DB
 }
 
 // NewModule builds a new Module instance
 func NewModule(
 	node node.Node,
-	database *bdjunodb.Db,
+	database *bdjunodb.DB,
 ) *Module {
 	return &Module{
 		node:     node,

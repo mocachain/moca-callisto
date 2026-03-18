@@ -1,0 +1,23 @@
+table:
+  name: buckets
+  schema: public
+select_permissions:
+  - role: anonymous
+    permission:
+      columns: "*"
+      filter: {}
+      limit: 100
+      allow_aggregations: true
+
+array_relationships:
+  - name: objects
+    using:
+      foreign_key_constraint_on:
+        column: bucket_id
+        table:
+          name: objects
+          schema: public
+object_relationships:
+  - name: global_virtual_group_family
+    using:
+      foreign_key_constraint_on: global_virtual_group_family_id

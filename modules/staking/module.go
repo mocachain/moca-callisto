@@ -19,13 +19,13 @@ var (
 // Module represents the x/staking module
 type Module struct {
 	cdc    codec.Codec
-	db     *database.Db
+	db     *database.DB
 	source stakingsource.Source
 }
 
 // NewModule returns a new Module instance
 func NewModule(
-	source stakingsource.Source, cdc codec.Codec, db *database.Db,
+	source stakingsource.Source, cdc codec.Codec, db *database.DB,
 ) *Module {
 	return &Module{
 		cdc:    cdc,

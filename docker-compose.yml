@@ -1,26 +1,52 @@
-version: '3.6'
+version: "3.6"
 services:
-  hasura:
-    image: hasura/graphql-engine:v2.0.4
+  postgres:
+    image: postgres:12
     ports:
-    - "8080:8080"
+      - "127.0.0.1:5432:5432"
     restart: always
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+      - ../../database/schema:/docker-entrypoint-initdb.d/
     environment:
-      ## this env var can be used to add the above postgres database to Hasura as a data source. this can be removed/updated based on your needs
-      HASURA_GRAPHQL_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      ## enable the console served by server
-      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
-      ## enable debugging mode. It is recommended to disable this in production
-      HASURA_GRAPHQL_DEV_MODE: "true"
-      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
-      ## uncomment next line to set an admin secret
-      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      POSTGRES_DB: bdjuno
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres_moca"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   bdjuno:
     build:
       context: .
       dockerfile: Dockerfile
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     command: bdjuno parse --home /bdjuno/.bdjuno
     volumes:
       ## Modify first path to match configuration file.
       - /bdjuno/.bdjuno:/bdjuno/.bdjuno
+  hasura:
+    image: hasura/graphql-engine:v2.0.4
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      bdjuno:
+        condition: service_started
+    environment:
+      ## this env var can be used to add the above postgres database to Hasura as a data source. this can be removed/updated based on your needs
+      HASURA_GRAPHQL_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "false" # set to "true" only for local isolated debugging
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "false"
+      ## set to "true" only after all production queries are in hasura/metadata/query_collections.yaml
+      HASURA_GRAPHQL_ENABLE_ALLOWLIST: "false"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:?HASURA_GRAPHQL_ADMIN_SECRET must be set}

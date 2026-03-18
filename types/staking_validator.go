@@ -2,7 +2,6 @@ package types
 
 import (
 	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -14,8 +13,8 @@ type Validator interface {
 	GetConsPubKey() string
 	GetOperator() string
 	GetSelfDelegateAddress() string
-	GetMaxChangeRate() *sdk.Dec
-	GetMaxRate() *sdk.Dec
+	GetMaxChangeRate() (*sdkmath.LegacyDec, error)
+	GetMaxRate() (*sdkmath.LegacyDec, error)
 	GetHeight() int64
 }
 
@@ -25,16 +24,16 @@ type validator struct {
 	ConsPubKey          string
 	OperatorAddr        string
 	SelfDelegateAddress string
-	MaxChangeRate       *sdk.Dec
-	MaxRate             *sdk.Dec
+	MaxChangeRate       *sdkmath.LegacyDec
+	MaxRate             *sdkmath.LegacyDec
 	Height              int64
 }
 
 // NewValidator allows to build a new Validator implementation having the given data
 func NewValidator(
 	consAddr string, opAddr string, consPubKey string,
-	selfDelegateAddress string, maxChangeRate *sdk.Dec,
-	maxRate *sdk.Dec, height int64,
+	selfDelegateAddress string, maxChangeRate *sdkmath.LegacyDec,
+	maxRate *sdkmath.LegacyDec, height int64,
 ) Validator {
 	return validator{
 		ConsensusAddr:       consAddr,
@@ -65,12 +64,12 @@ func (v validator) GetSelfDelegateAddress() string {
 	return v.SelfDelegateAddress
 }
 
-func (v validator) GetMaxChangeRate() *sdk.Dec {
-	return v.MaxChangeRate
+func (v validator) GetMaxChangeRate() (*sdkmath.LegacyDec, error) {
+	return v.MaxChangeRate, nil
 }
 
-func (v validator) GetMaxRate() *sdk.Dec {
-	return v.MaxRate
+func (v validator) GetMaxRate() (*sdkmath.LegacyDec, error) {
+	return v.MaxRate, nil
 }
 
 func (v validator) GetHeight() int64 {
@@ -105,14 +104,14 @@ func NewValidatorDescription(
 // ValidatorCommission contains the data of a validator commission at a given height
 type ValidatorCommission struct {
 	ValAddress        string
-	Commission        *sdk.Dec
+	Commission        *sdkmath.LegacyDec
 	MinSelfDelegation *sdkmath.Int
 	Height            int64
 }
 
 // NewValidatorCommission return a new validator commission instance
 func NewValidatorCommission(
-	valAddress string, rate *sdk.Dec, minSelfDelegation *sdkmath.Int, height int64,
+	valAddress string, rate *sdkmath.LegacyDec, minSelfDelegation *sdkmath.Int, height int64,
 ) ValidatorCommission {
 	return ValidatorCommission{
 		ValAddress:        valAddress,

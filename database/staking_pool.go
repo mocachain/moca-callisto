@@ -7,7 +7,7 @@ import (
 )
 
 // SaveStakingPool allows to save for the given height the given stakingtypes pool
-func (db *Db) SaveStakingPool(pool *types.Pool) error {
+func (db *DB) SaveStakingPool(pool *types.Pool) error {
 	stmt := `
 INSERT INTO staking_pool (bonded_tokens, not_bonded_tokens, unbonding_tokens, staked_not_bonded_tokens, height) 
 VALUES ($1, $2, $3, $4, $5)

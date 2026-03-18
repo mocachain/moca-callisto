@@ -2,7 +2,7 @@ package database_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegranttypes "cosmossdk.io/x/feegrant"
 
 	dbtypes "github.com/forbole/bdjuno/v4/database/types"
 	"github.com/forbole/bdjuno/v4/types"

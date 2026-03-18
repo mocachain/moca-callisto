@@ -16,7 +16,7 @@ import (
 )
 
 // SaveAccounts saves the given accounts inside the database
-func (db *Db) SaveAccounts(accounts []types.Account) error {
+func (db *DB) SaveAccounts(accounts []types.Account) error {
 	paramsNumber := 1
 	slices := dbutils.SplitAccounts(accounts, paramsNumber)
 
@@ -35,7 +35,7 @@ func (db *Db) SaveAccounts(accounts []types.Account) error {
 	return nil
 }
 
-func (db *Db) saveAccounts(paramsNumber int, accounts []types.Account) error {
+func (db *DB) saveAccounts(paramsNumber int, accounts []types.Account) error {
 	if len(accounts) == 0 {
 		return nil
 	}
@@ -60,7 +60,7 @@ func (db *Db) saveAccounts(paramsNumber int, accounts []types.Account) error {
 }
 
 // SaveVestingAccounts saves the given vesting accounts inside the database
-func (db *Db) SaveVestingAccounts(vestingAccounts []exported.VestingAccount) error {
+func (db *DB) SaveVestingAccounts(vestingAccounts []exported.VestingAccount) error {
 	if len(vestingAccounts) == 0 {
 		return nil
 	}
@@ -88,7 +88,7 @@ func (db *Db) SaveVestingAccounts(vestingAccounts []exported.VestingAccount) err
 	return nil
 }
 
-func (db *Db) storeVestingAccount(account exported.VestingAccount) (int, error) {
+func (db *DB) storeVestingAccount(account exported.VestingAccount) (int, error) {
 	stmt := `
 	INSERT INTO vesting_account (type, address, original_vesting, end_time, start_time) 
 	VALUES ($1, $2, $3, $4, $5)
@@ -106,7 +106,6 @@ func (db *Db) storeVestingAccount(account exported.VestingAccount) (int, error) 
 		time.Unix(account.GetEndTime(), 0),
 		time.Unix(account.GetStartTime(), 0),
 	).Scan(&vestingAccountRowID)
-
 	if err != nil {
 		return vestingAccountRowID, fmt.Errorf("error while saving Vesting Account of type %v: %s", proto.MessageName(account), err)
 	}
@@ -114,7 +113,7 @@ func (db *Db) storeVestingAccount(account exported.VestingAccount) (int, error) 
 	return vestingAccountRowID, nil
 }
 
-func (db *Db) StoreBaseVestingAccountFromMsg(bva *vestingtypes.BaseVestingAccount, txTimestamp time.Time) error {
+func (db *DB) StoreBaseVestingAccountFromMsg(bva *vestingtypes.BaseVestingAccount, txTimestamp time.Time) error {
 	stmt := `
 	INSERT INTO vesting_account (type, address, original_vesting, start_time, end_time) 
 	VALUES ($1, $2, $3, $4, $5)
@@ -137,7 +136,7 @@ func (db *Db) StoreBaseVestingAccountFromMsg(bva *vestingtypes.BaseVestingAccoun
 }
 
 // storeVestingPeriods handles storing the vesting periods of PeriodicVestingAccount type
-func (db *Db) storeVestingPeriods(id int, vestingPeriods []vestingtypes.Period) error {
+func (db *DB) storeVestingPeriods(id int, vestingPeriods []vestingtypes.Period) error {
 	// Delete already existing periods
 	stmt := `DELETE FROM vesting_period WHERE vesting_account_id = $1`
 	_, err := db.SQL.Exec(stmt, id)
@@ -170,7 +169,7 @@ VALUES `
 }
 
 // GetAccounts returns all the accounts that are currently stored inside the database.
-func (db *Db) GetAccounts() ([]string, error) {
+func (db *DB) GetAccounts() ([]string, error) {
 	var rows []string
 	err := db.Sqlx.Select(&rows, `SELECT address FROM account`)
 	return rows, err

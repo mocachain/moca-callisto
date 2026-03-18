@@ -16,8 +16,8 @@ import (
 	"github.com/forbole/bdjuno/v4/database"
 	"github.com/forbole/bdjuno/v4/modules"
 
-	"cosmossdk.io/simapp"
-	evmosapp "github.com/evmos/evmos/v14/app"
+	// "cosmossdk.io/simapp" // ModuleBasics deprecated in v0.50
+	// evmosapp "github.com/evmos/evmos/v12/app" // ModuleBasics deprecated in v0.50
 )
 
 func main() {
@@ -54,11 +54,9 @@ func main() {
 // getBasicManagers returns the various basic managers that are used to register the encoding to
 // support custom messages.
 // This should be edited by custom implementations if needed.
+// Note: ModuleBasics is deprecated in v0.50, so we return an empty slice.
 func getBasicManagers() []module.BasicManager {
-	return []module.BasicManager{
-		simapp.ModuleBasics,
-		evmosapp.ModuleBasics,
-	}
+	return []module.BasicManager{}
 }
 
 // getAddressesParser returns the messages parser that should be used to get the users involved in

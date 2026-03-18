@@ -14,11 +14,11 @@ var (
 
 type Module struct {
 	cfg config.ChainConfig
-	db  *database.Db
+	db  *database.DB
 }
 
 // NewModule returns a new Module instance
-func NewModule(cfg config.ChainConfig, db *database.Db) *Module {
+func NewModule(cfg config.ChainConfig, db *database.DB) *Module {
 	return &Module{
 		cfg: cfg,
 		db:  db,

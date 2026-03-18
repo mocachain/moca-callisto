@@ -2,10 +2,11 @@ package database
 
 import (
 	"fmt"
+	"strings"
 )
 
 // InsertEnableModules allows to save enabled module into the database
-func (db *Db) InsertEnableModules(modules []string) error {
+func (db *DB) InsertEnableModules(modules []string) error {
 	if len(modules) == 0 {
 		return nil
 	}
@@ -35,4 +36,17 @@ func (db *Db) InsertEnableModules(modules []string) error {
 	}
 
 	return nil
+}
+
+func ExtractEvent(event string) string {
+	lastDotIndex := strings.LastIndex(event, ".")
+	if lastDotIndex == -1 {
+		return ""
+	}
+	afterDot := event[lastDotIndex+1:]
+	prefix := "Event"
+	if strings.HasPrefix(afterDot, prefix) {
+		return afterDot[len(prefix):]
+	}
+	return afterDot
 }

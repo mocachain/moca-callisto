@@ -9,10 +9,11 @@ import (
 	proposaltypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"google.golang.org/grpc/codes"
 
 	tmctypes "github.com/cometbft/cometbft/rpc/core/types"
+	juno "github.com/forbole/juno/v5/types"
 
 	"github.com/forbole/bdjuno/v4/types"
 
@@ -22,7 +23,6 @@ import (
 
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	inflationtypes "github.com/evmos/evmos/v14/x/inflation/types"
 )
 
 func (m *Module) UpdateProposal(height int64, blockTime time.Time, id uint64) error {
@@ -100,11 +100,6 @@ func (m *Module) handleParamChangeProposal(height int64, paramChangeProposal *pr
 	for _, change := range paramChangeProposal.Changes {
 		// Update the params for corresponding modules
 		switch change.Subspace {
-		case inflationtypes.ModuleName:
-			err = m.inflationModule.UpdateParams(height)
-			if err != nil {
-				return fmt.Errorf("error while updating ParamChangeProposal %s params : %s", inflationtypes.ModuleName, err)
-			}
 		case distrtypes.ModuleName:
 			err = m.distrModule.UpdateParams(height)
 			if err != nil {
@@ -238,19 +233,20 @@ func (m *Module) updateProposalValidatorStatusesSnapshot(
 			return err
 		}
 
-		status, err := findStatus(consAddr.String(), statuses)
+		consAddrStr := juno.ConvertValidatorAddressToBech32String(consAddr)
+		status, err := findStatus(consAddrStr, statuses)
 		if err != nil {
 			return fmt.Errorf("error while searching for status: %s", err)
 		}
 
-		votingPower, err := findVotingPower(consAddr.String(), votingPowers)
+		votingPower, err := findVotingPower(consAddrStr, votingPowers)
 		if err != nil {
 			return fmt.Errorf("error while searching for voting power: %s", err)
 		}
 
 		snapshots[index] = types.NewProposalValidatorStatusSnapshot(
 			proposalID,
-			consAddr.String(),
+			consAddrStr,
 			votingPower.VotingPower,
 			status.Status,
 			status.Jailed,

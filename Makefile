@@ -1,3 +1,12 @@
+# Load .env file if it exists
+-include .env
+export
+
+# Configure git to use HTTPS+Token for private repositories if GITHUB_TOKEN is set
+ifdef GITHUB_TOKEN
+  $(shell git config --global url."https://$(GITHUB_TOKEN):@github.com/".insteadOf "https://github.com/" 2>/dev/null)
+endif
+
 VERSION := $(shell echo $(shell git describe --tags) | sed 's/^v//')
 COMMIT  := $(shell git log -1 --format='%H')
 
@@ -15,7 +24,7 @@ all: lint build test-unit
 
 LD_FLAGS = -X github.com/forbole/juno/v5/cmd.Version=$(VERSION) \
 	-X github.com/forbole/juno/v5/cmd.Commit=$(COMMIT)
-BUILD_FLAGS :=  -ldflags '$(LD_FLAGS)'
+BUILD_FLAGS :=  -gcflags='all=-N -l' -ldflags '$(LD_FLAGS)'
 
 ifeq ($(LINK_STATICALLY),true)
   LD_FLAGS += -linkmode=external -extldflags "-Wl,-z,muldefs -static"

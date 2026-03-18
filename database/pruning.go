@@ -3,7 +3,7 @@ package database
 import "fmt"
 
 // Prune implements db.PruningDb
-func (db *Db) Prune(height int64) error {
+func (db *DB) Prune(height int64) error {
 	// Prune default tables
 	err := db.Database.Prune(height)
 	if err != nil {
@@ -39,7 +39,7 @@ func (db *Db) Prune(height int64) error {
 	return nil
 }
 
-func (db *Db) pruneBank(height int64) error {
+func (db *DB) pruneBank(height int64) error {
 	_, err := db.SQL.Exec(`DELETE FROM supply WHERE height = $1`, height)
 	if err != nil {
 		return fmt.Errorf("error while pruning supply: %s", err)
@@ -47,7 +47,7 @@ func (db *Db) pruneBank(height int64) error {
 	return nil
 }
 
-func (db *Db) pruneStaking(height int64) error {
+func (db *DB) pruneStaking(height int64) error {
 	_, err := db.SQL.Exec(`DELETE FROM staking_pool WHERE height = $1`, height)
 	if err != nil {
 		return fmt.Errorf("error while pruning staking pool: %s", err)
@@ -81,12 +81,15 @@ func (db *Db) pruneStaking(height int64) error {
 	return nil
 }
 
-func (db *Db) pruneMint(height int64) error {
+func (db *DB) pruneMint(height int64) error {
 	_, err := db.SQL.Exec(`DELETE FROM inflation WHERE height = $1`, height)
-	return fmt.Errorf("error while pruning inflation: %s", err)
+	if err != nil {
+		return fmt.Errorf("error while pruning inflation: %w", err)
+	}
+	return nil
 }
 
-func (db *Db) pruneDistribution(height int64) error {
+func (db *DB) pruneDistribution(height int64) error {
 	_, err := db.SQL.Exec(`DELETE FROM community_pool WHERE height = $1`, height)
 	if err != nil {
 		return fmt.Errorf("error while pruning community pool: %s", err)
@@ -95,7 +98,7 @@ func (db *Db) pruneDistribution(height int64) error {
 	return nil
 }
 
-func (db *Db) pruneSlashing(height int64) error {
+func (db *DB) pruneSlashing(height int64) error {
 	_, err := db.SQL.Exec(`DELETE FROM validator_signing_info WHERE height = $1`, height)
 	if err != nil {
 		return fmt.Errorf("error while pruning validator signing info: %s", err)

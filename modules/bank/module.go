@@ -19,7 +19,7 @@ var (
 // Module represents the x/bank module
 type Module struct {
 	cdc codec.Codec
-	db  *database.Db
+	db  *database.DB
 
 	messageParser junomessages.MessageAddressesParser
 	keeper        source.Source
@@ -27,7 +27,7 @@ type Module struct {
 
 // NewModule returns a new Module instance
 func NewModule(
-	messageParser junomessages.MessageAddressesParser, keeper source.Source, cdc codec.Codec, db *database.Db,
+	messageParser junomessages.MessageAddressesParser, keeper source.Source, cdc codec.Codec, db *database.DB,
 ) *Module {
 	return &Module{
 		cdc:           cdc,

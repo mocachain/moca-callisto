@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "shell",
+      "label": "localup",
+      "command": "./localup.sh reset",
+      "options": {
+        "cwd": "${workspaceFolder}/deployment/localup"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "build",
+      "command": "make build",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -17,11 +17,11 @@ var (
 // Module represent x/feegrant module
 type Module struct {
 	cdc codec.Codec
-	db  *database.Db
+	db  *database.DB
 }
 
 // NewModule returns a new Module instance
-func NewModule(cdc codec.Codec, db *database.Db) *Module {
+func NewModule(cdc codec.Codec, db *database.DB) *Module {
 	return &Module{
 		cdc: cdc,
 		db:  db,

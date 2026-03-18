@@ -13,7 +13,7 @@ import (
 )
 
 // SaveCommunityPool allows to save for the given height the given total amount of coins
-func (db *Db) SaveCommunityPool(coin sdk.DecCoins, height int64) error {
+func (db *DB) SaveCommunityPool(coin sdk.DecCoins, height int64) error {
 	query := `
 INSERT INTO community_pool(coins, height) 
 VALUES ($1, $2) 
@@ -32,7 +32,7 @@ WHERE community_pool.height <= excluded.height`
 // -------------------------------------------------------------------------------------------------------------------
 
 // SaveDistributionParams allows to store the given distribution parameters inside the database
-func (db *Db) SaveDistributionParams(params *types.DistributionParams) error {
+func (db *DB) SaveDistributionParams(params *types.DistributionParams) error {
 	paramsBz, err := json.Marshal(&params.Params)
 	if err != nil {
 		return fmt.Errorf("error while marshaling params: %s", err)

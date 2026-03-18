@@ -54,9 +54,12 @@ func (m *Module) handleMsgCreateVestingAccount(msg *vestingtypes.MsgCreateVestin
 		return fmt.Errorf("error while storing vesting account: %s", err)
 	}
 
-	bva := vestingtypes.NewBaseVestingAccount(
+	bva, err := vestingtypes.NewBaseVestingAccount(
 		authttypes.NewBaseAccountWithAddress(accAddress), msg.Amount, msg.EndTime,
 	)
+	if err != nil {
+		return fmt.Errorf("error while creating base vesting account: %s", err)
+	}
 	err = m.db.StoreBaseVestingAccountFromMsg(bva, txTimestamp)
 	if err != nil {
 		return fmt.Errorf("error while storing base vesting account from msg %s", err)

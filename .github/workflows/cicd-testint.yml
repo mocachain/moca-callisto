@@ -1,0 +1,38 @@
+# For developer
+name: Deploy for testint
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  publish_image:
+    name: Publish Docker image
+    uses: './.github/workflows/docker-publish.yml'
+    secrets: inherit
+    with:
+      tags: mocachain/moca-callisto:test
+
+
+  deploy_with_k8s:
+    runs-on: ubuntu-latest
+    needs: publish_image
+    steps:
+      - name: "Deploy new StatefulSet"
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBECONFIG_DEV }}
+        with:
+          args: -n moca-test rollout restart deployment moca-callisto-bdjuno
+
+      - name: "Check StatefulSet"
+        uses: actions-hub/kubectl@master
+        env:
+          KUBE_CONFIG: ${{ secrets.KUBECONFIG_DEV }}
+        with:
+          args: -n moca-test rollout status deployment moca-callisto-bdjuno --timeout=600s

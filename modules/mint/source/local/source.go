@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/forbole/juno/v5/node/local"
 
@@ -29,15 +30,15 @@ func NewSource(source *local.Source, querier minttypes.QueryServer) *Source {
 }
 
 // GetInflation implements mintsource.Source
-func (s Source) GetInflation(height int64) (sdk.Dec, error) {
+func (s Source) GetInflation(height int64) (sdkmath.LegacyDec, error) {
 	ctx, err := s.LoadHeight(height)
 	if err != nil {
-		return sdk.Dec{}, fmt.Errorf("error while loading height: %s", err)
+		return sdkmath.LegacyDec{}, fmt.Errorf("error while loading height: %s", err)
 	}
 
 	res, err := s.querier.Inflation(sdk.WrapSDKContext(ctx), &minttypes.QueryInflationRequest{})
 	if err != nil {
-		return sdk.Dec{}, err
+		return sdkmath.LegacyDec{}, err
 	}
 
 	return res.Inflation, nil

@@ -239,8 +239,12 @@ VALUES ('cosmosvalcons1qqqqrezrl53hujmpdch6d805ac75n220ku09rl',
 	)
 
 	suite.Require().Equal("cosmos184ma3twcfjqef6k95ne8w2hk80x2kah7vcwy4a", validator.GetSelfDelegateAddress())
-	suite.Require().True(validator.GetMaxChangeRate().Equal(maxChangeRate))
-	suite.Require().True(validator.GetMaxRate().Equal(maxRate))
+	maxChangeRateValue, err := validator.GetMaxChangeRate()
+	suite.Require().NoError(err)
+	maxRateValue, err := validator.GetMaxRate()
+	suite.Require().NoError(err)
+	suite.Require().True(maxChangeRateValue.Equal(maxChangeRate))
+	suite.Require().True(maxRateValue.Equal(maxRate))
 
 }
 

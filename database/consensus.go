@@ -10,7 +10,7 @@ import (
 )
 
 // GetLastBlock returns the last block stored inside the database based on the heights
-func (db *Db) GetLastBlock() (*dbtypes.BlockRow, error) {
+func (db *DB) GetLastBlock() (*dbtypes.BlockRow, error) {
 	stmt := `SELECT * FROM block ORDER BY height DESC LIMIT 1`
 
 	var blocks []dbtypes.BlockRow
@@ -26,7 +26,7 @@ func (db *Db) GetLastBlock() (*dbtypes.BlockRow, error) {
 }
 
 // GetLastBlockHeight returns the last block height stored inside the database
-func (db *Db) GetLastBlockHeight() (int64, error) {
+func (db *DB) GetLastBlockHeight() (int64, error) {
 	stmt := `SELECT height FROM block ORDER BY height DESC LIMIT 1`
 
 	var heights []int64
@@ -44,7 +44,7 @@ func (db *Db) GetLastBlockHeight() (int64, error) {
 // -------------------------------------------------------------------------------------------------------------------
 
 // getBlockHeightTime retrieves the block at the specific time
-func (db *Db) getBlockHeightTime(pastTime time.Time) (dbtypes.BlockRow, error) {
+func (db *DB) getBlockHeightTime(pastTime time.Time) (dbtypes.BlockRow, error) {
 	stmt := `SELECT * FROM block WHERE block.timestamp <= $1 ORDER BY block.timestamp DESC LIMIT 1;`
 
 	var val []dbtypes.BlockRow
@@ -61,21 +61,21 @@ func (db *Db) getBlockHeightTime(pastTime time.Time) (dbtypes.BlockRow, error) {
 
 // GetBlockHeightTimeMinuteAgo return block height and time that a block proposals
 // about a minute ago from input date
-func (db *Db) GetBlockHeightTimeMinuteAgo(now time.Time) (dbtypes.BlockRow, error) {
+func (db *DB) GetBlockHeightTimeMinuteAgo(now time.Time) (dbtypes.BlockRow, error) {
 	pastTime := now.Add(time.Minute * -1)
 	return db.getBlockHeightTime(pastTime)
 }
 
 // GetBlockHeightTimeHourAgo return block height and time that a block proposals
 // about a hour ago from input date
-func (db *Db) GetBlockHeightTimeHourAgo(now time.Time) (dbtypes.BlockRow, error) {
+func (db *DB) GetBlockHeightTimeHourAgo(now time.Time) (dbtypes.BlockRow, error) {
 	pastTime := now.Add(time.Hour * -1)
 	return db.getBlockHeightTime(pastTime)
 }
 
 // GetBlockHeightTimeDayAgo return block height and time that a block proposals
 // about a day (24hour) ago from input date
-func (db *Db) GetBlockHeightTimeDayAgo(now time.Time) (dbtypes.BlockRow, error) {
+func (db *DB) GetBlockHeightTimeDayAgo(now time.Time) (dbtypes.BlockRow, error) {
 	pastTime := now.Add(time.Hour * -24)
 	return db.getBlockHeightTime(pastTime)
 }
@@ -83,7 +83,7 @@ func (db *Db) GetBlockHeightTimeDayAgo(now time.Time) (dbtypes.BlockRow, error) 
 // -------------------------------------------------------------------------------------------------------------------
 
 // SaveAverageBlockTimePerMin save the average block time in average_block_time_per_minute table
-func (db *Db) SaveAverageBlockTimePerMin(averageTime float64, height int64) error {
+func (db *DB) SaveAverageBlockTimePerMin(averageTime float64, height int64) error {
 	stmt := `
 INSERT INTO average_block_time_per_minute(average_time, height) 
 VALUES ($1, $2) 
@@ -101,7 +101,7 @@ WHERE average_block_time_per_minute.height <= excluded.height`
 }
 
 // SaveAverageBlockTimePerHour save the average block time in average_block_time_per_hour table
-func (db *Db) SaveAverageBlockTimePerHour(averageTime float64, height int64) error {
+func (db *DB) SaveAverageBlockTimePerHour(averageTime float64, height int64) error {
 	stmt := `
 INSERT INTO average_block_time_per_hour(average_time, height) 
 VALUES ($1, $2) 
@@ -119,7 +119,7 @@ WHERE average_block_time_per_hour.height <= excluded.height`
 }
 
 // SaveAverageBlockTimePerDay save the average block time in average_block_time_per_day table
-func (db *Db) SaveAverageBlockTimePerDay(averageTime float64, height int64) error {
+func (db *DB) SaveAverageBlockTimePerDay(averageTime float64, height int64) error {
 	stmt := `
 INSERT INTO average_block_time_per_day(average_time, height) 
 VALUES ($1, $2)
@@ -137,7 +137,7 @@ WHERE average_block_time_per_day.height <= excluded.height`
 }
 
 // SaveAverageBlockTimeGenesis save the average block time in average_block_time_from_genesis table
-func (db *Db) SaveAverageBlockTimeGenesis(averageTime float64, height int64) error {
+func (db *DB) SaveAverageBlockTimeGenesis(averageTime float64, height int64) error {
 	stmt := `
 INSERT INTO average_block_time_from_genesis(average_time ,height) 
 VALUES ($1, $2) 
@@ -157,7 +157,7 @@ WHERE average_block_time_from_genesis.height <= excluded.height`
 // -------------------------------------------------------------------------------------------------------------------
 
 // SaveGenesis save the given genesis data
-func (db *Db) SaveGenesis(genesis *types.Genesis) error {
+func (db *DB) SaveGenesis(genesis *types.Genesis) error {
 	stmt := `
 INSERT INTO genesis(time, chain_id, initial_height) 
 VALUES ($1, $2, $3) ON CONFLICT (one_row_id) DO UPDATE 
@@ -174,7 +174,7 @@ VALUES ($1, $2, $3) ON CONFLICT (one_row_id) DO UPDATE
 }
 
 // GetGenesis returns the genesis information stored inside the database
-func (db *Db) GetGenesis() (*types.Genesis, error) {
+func (db *DB) GetGenesis() (*types.Genesis, error) {
 	var rows []*dbtypes.GenesisRow
 	err := db.Sqlx.Select(&rows, `SELECT * FROM genesis;`)
 	if err != nil {

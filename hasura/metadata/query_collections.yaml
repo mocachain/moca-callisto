@@ -1,1 +1,8 @@
-[]
+- name: allowed-queries
+  definition:
+    queries:
+      - name: healthcheck_typename
+        query: |
+          query healthcheck_typename {
+            __typename
+          }

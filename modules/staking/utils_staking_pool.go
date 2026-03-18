@@ -3,7 +3,7 @@ package staking
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/forbole/bdjuno/v4/types"
@@ -20,7 +20,7 @@ func (m *Module) GetStakingPool(height int64) (*types.Pool, error) {
 		return nil, fmt.Errorf("error while getting validators list: %s", err)
 	}
 
-	var unbondingTokens = sdk.NewInt(0)
+	var unbondingTokens = sdkmath.ZeroInt()
 
 	for _, validator := range validatorsList {
 		// get list of all unbonding delegations for each validator

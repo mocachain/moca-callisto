@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegranttypes "cosmossdk.io/x/feegrant"
 	juno "github.com/forbole/juno/v5/types"
 
 	"github.com/forbole/bdjuno/v4/types"

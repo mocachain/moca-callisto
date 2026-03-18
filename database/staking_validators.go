@@ -12,12 +12,12 @@ import (
 )
 
 // SaveValidatorData saves properly the information about the given validator.
-func (db *Db) SaveValidatorData(validator types.Validator) error {
+func (db *DB) SaveValidatorData(validator types.Validator) error {
 	return db.SaveValidatorsData([]types.Validator{validator})
 }
 
 // SaveValidatorsData allows the bulk saving of a list of validators.
-func (db *Db) SaveValidatorsData(validators []types.Validator) error {
+func (db *DB) SaveValidatorsData(validators []types.Validator) error {
 	if len(validators) == 0 {
 		return nil
 	}
@@ -38,6 +38,14 @@ VALUES `
 	for i, validator := range validators {
 		vp := i * 2 // Starting position for validator params
 		vi := i * 6 // Starting position for validator info params
+		maxChangeRate, err := validator.GetMaxChangeRate()
+		if err != nil {
+			return fmt.Errorf("error while reading validator max_change_rate: %s", err)
+		}
+		maxRate, err := validator.GetMaxRate()
+		if err != nil {
+			return fmt.Errorf("error while reading validator max_rate: %s", err)
+		}
 
 		selfDelegationAccQuery += fmt.Sprintf("($%d),", i+1)
 		selfDelegationParam = append(selfDelegationParam,
@@ -50,7 +58,7 @@ VALUES `
 		validatorInfoQuery += fmt.Sprintf("($%d,$%d,$%d,$%d,$%d,$%d),", vi+1, vi+2, vi+3, vi+4, vi+5, vi+6)
 		validatorInfoParams = append(validatorInfoParams,
 			validator.GetConsAddr(), validator.GetOperator(), validator.GetSelfDelegateAddress(),
-			validator.GetMaxChangeRate().String(), validator.GetMaxRate().String(), validator.GetHeight(),
+			maxChangeRate.String(), maxRate.String(), validator.GetHeight(),
 		)
 	}
 
@@ -87,7 +95,7 @@ WHERE validator_info.height <= excluded.height`
 }
 
 // GetValidatorConsensusAddress returns the consensus address of the validator having the given operator address
-func (db *Db) GetValidatorConsensusAddress(address string) (sdk.ConsAddress, error) {
+func (db *DB) GetValidatorConsensusAddress(address string) (sdk.ConsAddress, error) {
 	var result []string
 	stmt := `SELECT consensus_address FROM validator_info WHERE operator_address = $1`
 	err := db.Sqlx.Select(&result, stmt, address)
@@ -103,7 +111,7 @@ func (db *Db) GetValidatorConsensusAddress(address string) (sdk.ConsAddress, err
 }
 
 // GetValidatorOperatorAddress returns the operator address of the validator having the given consensus address
-func (db *Db) GetValidatorOperatorAddress(consAddr string) (sdk.ValAddress, error) {
+func (db *DB) GetValidatorOperatorAddress(consAddr string) (sdk.ValAddress, error) {
 	var result []string
 	stmt := `SELECT operator_address FROM validator_info WHERE consensus_address = $1`
 	err := db.Sqlx.Select(&result, stmt, consAddr)
@@ -116,12 +124,11 @@ func (db *Db) GetValidatorOperatorAddress(consAddr string) (sdk.ValAddress, erro
 	}
 
 	return sdk.ValAddressFromBech32(result[0])
-
 }
 
 // GetValidator returns the validator having the given address.
 // If no validator for such address can be found, an error is returned instead.
-func (db *Db) GetValidator(valAddress string) (types.Validator, error) {
+func (db *DB) GetValidator(valAddress string) (types.Validator, error) {
 	var result []dbtypes.ValidatorData
 	stmt := `
 SELECT validator.consensus_address, 
@@ -146,7 +153,7 @@ WHERE validator_info.operator_address = $1`
 }
 
 // GetValidators returns all the validators that are currently stored inside the database.
-func (db *Db) GetValidators() ([]types.Validator, error) {
+func (db *DB) GetValidators() ([]types.Validator, error) {
 	sqlStmt := `
 SELECT DISTINCT ON (validator.consensus_address) 
 	validator.consensus_address, 
@@ -167,7 +174,7 @@ ORDER BY validator.consensus_address`
 		return nil, err
 	}
 
-	var data = make([]types.Validator, len(rows))
+	data := make([]types.Validator, len(rows))
 	for index, row := range rows {
 		data[index] = row
 	}
@@ -177,7 +184,7 @@ ORDER BY validator.consensus_address`
 
 // GetValidatorBySelfDelegateAddress returns the validator having the given address as the self_delegate_address,
 // or an error if such validator cannot be found.
-func (db *Db) GetValidatorBySelfDelegateAddress(address string) (types.Validator, error) {
+func (db *DB) GetValidatorBySelfDelegateAddress(address string) (types.Validator, error) {
 	var result []dbtypes.ValidatorData
 	stmt := `
 SELECT validator.consensus_address, 
@@ -207,7 +214,7 @@ WHERE validator_info.self_delegate_address = $1`
 // It assumes that the delegator address is already present inside the
 // proper database table.
 // TIP: To store the validator data call SaveValidatorData.
-func (db *Db) SaveValidatorDescription(description types.ValidatorDescription) error {
+func (db *DB) SaveValidatorDescription(description types.ValidatorDescription) error {
 	consAddr, err := db.GetValidatorConsensusAddress(description.OperatorAddress)
 	if err != nil {
 		return err
@@ -219,7 +226,7 @@ func (db *Db) SaveValidatorDescription(description types.ValidatorDescription) e
 	}
 
 	// Update the existing description with this one, if one is already present
-	var avatarURL = description.AvatarURL
+	avatarURL := description.AvatarURL
 	if existing, found := db.getValidatorDescription(consAddr); found {
 		des, err = existing.Description.UpdateDescription(des)
 		if err != nil {
@@ -266,7 +273,7 @@ WHERE validator_description.height <= excluded.height`
 
 // getValidatorDescription returns the description of the validator having the given address.
 // If no description could be found, returns false instead
-func (db *Db) getValidatorDescription(address sdk.ConsAddress) (*types.ValidatorDescription, bool) {
+func (db *DB) getValidatorDescription(address sdk.ConsAddress) (*types.ValidatorDescription, bool) {
 	var result []dbtypes.ValidatorDescriptionRow
 	stmt := `SELECT * FROM validator_description WHERE validator_description.validator_address = $1`
 
@@ -301,7 +308,7 @@ func (db *Db) getValidatorDescription(address sdk.ConsAddress) (*types.Validator
 // It assumes that the delegator address is already present inside the
 // proper database table.
 // TIP: To store the validator data call SaveValidatorData.
-func (db *Db) SaveValidatorCommission(data types.ValidatorCommission) error {
+func (db *DB) SaveValidatorCommission(data types.ValidatorCommission) error {
 	if data.MinSelfDelegation == nil && data.Commission == nil {
 		// Nothing to update
 		return nil
@@ -350,7 +357,7 @@ WHERE validator_commission.height <= excluded.height`
 
 // getValidatorCommission returns the commissions of the validator having the given address.
 // If no commissions could be found, returns false instead
-func (db *Db) getValidatorCommission(address sdk.ConsAddress) (*dbtypes.ValidatorCommissionRow, bool) {
+func (db *DB) getValidatorCommission(address sdk.ConsAddress) (*dbtypes.ValidatorCommissionRow, bool) {
 	var rows []dbtypes.ValidatorCommissionRow
 	stmt := `SELECT * FROM validator_commission WHERE validator_address = $1`
 	err := db.Sqlx.Select(&rows, stmt, address.String())
@@ -367,7 +374,7 @@ func (db *Db) getValidatorCommission(address sdk.ConsAddress) (*dbtypes.Validato
 // It assumes that the delegator address is already present inside the
 // proper database table.
 // TIP: To store the validator data call SaveValidatorData.
-func (db *Db) SaveValidatorsVotingPowers(entries []types.ValidatorVotingPower) error {
+func (db *DB) SaveValidatorsVotingPowers(entries []types.ValidatorVotingPower) error {
 	if len(entries) == 0 {
 		return nil
 	}
@@ -399,7 +406,7 @@ WHERE validator_voting_power.height <= excluded.height`
 // --------------------------------------------------------------------------------------------------------------------
 
 // SaveValidatorsStatuses save validator jail and status in the given height and timestamp
-func (db *Db) SaveValidatorsStatuses(statuses []types.ValidatorStatus) error {
+func (db *DB) SaveValidatorsStatuses(statuses []types.ValidatorStatus) error {
 	if len(statuses) == 0 {
 		return nil
 	}
@@ -443,7 +450,7 @@ WHERE validator_status.height <= excluded.height`
 }
 
 // saveDoubleSignVote saves the given vote inside the database, returning the row id
-func (db *Db) saveDoubleSignVote(vote types.DoubleSignVote) (int64, error) {
+func (db *DB) saveDoubleSignVote(vote types.DoubleSignVote) (int64, error) {
 	stmt := `
 INSERT INTO double_sign_vote 
     (type, height, round, block_id, validator_address, validator_index, signature) 
@@ -457,7 +464,7 @@ VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING RETURNING id`
 }
 
 // SaveDoubleSignEvidence saves the given double sign evidence inside the proper tables
-func (db *Db) SaveDoubleSignEvidence(evidence types.DoubleSignEvidence) error {
+func (db *DB) SaveDoubleSignEvidence(evidence types.DoubleSignEvidence) error {
 	voteA, err := db.saveDoubleSignVote(evidence.VoteA)
 	if err != nil {
 		return fmt.Errorf("error while storing double sign vote: %s", err)

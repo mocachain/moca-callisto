@@ -1,0 +1,14 @@
+table:
+  name: objects
+  schema: public
+select_permissions:
+  - role: anonymous
+    permission:
+      columns: "*"
+      filter: {}
+      limit: 100
+      allow_aggregations: true
+object_relationships:
+  - name: bucket
+    using:
+      foreign_key_constraint_on: bucket_id

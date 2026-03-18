@@ -13,12 +13,12 @@ var (
 
 // Module represents the x/upgrade module
 type Module struct {
-	db            *database.Db
+	db            *database.DB
 	stakingModule StakingModule
 }
 
 // NewModule builds a new Module instance
-func NewModule(db *database.Db, stakingModule StakingModule) *Module {
+func NewModule(db *database.DB, stakingModule StakingModule) *Module {
 	return &Module{
 		stakingModule: stakingModule,
 		db:            db,

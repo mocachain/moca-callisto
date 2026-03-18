@@ -37,7 +37,7 @@ func TestDatabaseTestSuite(t *testing.T) {
 type DbTestSuite struct {
 	suite.Suite
 
-	database *database.Db
+	database *database.DB
 }
 
 func (suite *DbTestSuite) SetupTest() {
@@ -59,7 +59,7 @@ func (suite *DbTestSuite) SetupTest() {
 	db, err := database.Builder(junodb.NewContext(dbCfg, &codec, logging.DefaultLogger()))
 	suite.Require().NoError(err)
 
-	bigDipperDb, ok := (db).(*database.Db)
+	bigDipperDb, ok := (db).(*database.DB)
 	suite.Require().True(ok)
 
 	// Delete the public schema

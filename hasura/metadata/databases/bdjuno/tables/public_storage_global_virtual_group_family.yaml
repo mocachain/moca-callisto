@@ -1,0 +1,28 @@
+table:
+  name: global_virtual_group_families
+  schema: public
+
+select_permissions:
+  - role: anonymous
+    permission:
+      columns: "*"
+      filter: {}
+      limit: 100
+      allow_aggregations: true
+
+array_relationships:
+  - name: gvg
+    using:
+      foreign_key_constraint_on:
+        column: family_id
+        table:
+          name: global_virtual_groups
+          schema: public
+
+object_relationships:
+  - name: primary_sp
+    using:
+      foreign_key_constraint_on: primary_sp_id
+  - name: gvg
+    using:
+      foreign_key_constraint_on: primary_sp_id

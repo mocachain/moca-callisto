@@ -19,11 +19,11 @@ var (
 type Module struct {
 	cfg *Config
 	cdc codec.Codec
-	db  *database.Db
+	db  *database.DB
 }
 
 // NewModule returns a new Module instance
-func NewModule(cfg config.Config, cdc codec.Codec, db *database.Db) *Module {
+func NewModule(cfg config.Config, cdc codec.Codec, db *database.DB) *Module {
 	bz, err := cfg.GetBytes()
 	if err != nil {
 		panic(err)

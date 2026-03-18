@@ -10,7 +10,7 @@ import (
 )
 
 // SaveSupply allows to save for the given height the given total amount of coins
-func (db *Db) SaveSupply(coins sdk.Coins, height int64) error {
+func (db *DB) SaveSupply(coins sdk.Coins, height int64) error {
 	query := `
 INSERT INTO supply (coins, height) 
 VALUES ($1, $2) 

@@ -15,11 +15,11 @@ var (
 
 // Module implements the consensus utils
 type Module struct {
-	db *database.Db
+	db *database.DB
 }
 
 // NewModule builds a new Module instance
-func NewModule(db *database.Db) *Module {
+func NewModule(db *database.DB) *Module {
 	return &Module{
 		db: db,
 	}

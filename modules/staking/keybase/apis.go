@@ -1,11 +1,22 @@
 package keybase
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"time"
 )
+
+const (
+	keybaseRequestTimeout  = 10 * time.Second
+	keybaseMaxResponseSize = 2 << 20 // 2 MiB
+)
+
+var keybaseHTTPClient = &http.Client{
+	Timeout: keybaseRequestTimeout,
+}
 
 // GetAvatarURL returns the avatar URL from the given identity.
 // If no identity is found, it returns an empty string instead.
@@ -44,19 +55,26 @@ func GetAvatarURL(identity string) (string, error) {
 // queryKeyBase queries the Keybase APIs for the given endpoint, and de-serializes
 // the response as a JSON object inside the given ptr
 func queryKeyBase(endpoint string, ptr interface{}) error {
-	resp, err := http.Get("https://keybase.io/_/api/1.0" + endpoint)
+	ctx, cancel := context.WithTimeout(context.Background(), keybaseRequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://keybase.io/_/api/1.0"+endpoint, nil)
+	if err != nil {
+		return fmt.Errorf("error while building keybase request: %s", err)
+	}
+
+	resp, err := keybaseHTTPClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error while querying keybase APIs: %s", err)
 	}
-
 	defer resp.Body.Close()
 
-	bz, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("error while reading response body: %s", err)
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("keybase returned non-success status: %d", resp.StatusCode)
 	}
 
-	err = json.Unmarshal(bz, &ptr)
+	decoder := json.NewDecoder(io.LimitReader(resp.Body, keybaseMaxResponseSize))
+	err = decoder.Decode(ptr)
 	if err != nil {
 		return fmt.Errorf("error while unmarshaling response body: %s", err)
 	}

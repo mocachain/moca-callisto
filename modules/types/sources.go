@@ -2,27 +2,20 @@ package types
 
 import (
 	"fmt"
-	"os"
 
-	inflationtypes "github.com/evmos/evmos/v14/x/inflation/types"
-
-	"github.com/forbole/juno/v5/node/remote"
-
+	"cosmossdk.io/log"
+	"cosmossdk.io/simapp/params"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govtypesv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/forbole/juno/v5/node/local"
-
-	"cosmossdk.io/simapp/params"
-	"github.com/cometbft/cometbft/libs/log"
-
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	evmosapp "github.com/evmos/evmos/v14/app"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	evmosapp "github.com/evmos/evmos/v12/app"
 	banksource "github.com/forbole/bdjuno/v4/modules/bank/source"
 	localbanksource "github.com/forbole/bdjuno/v4/modules/bank/source/local"
 	remotebanksource "github.com/forbole/bdjuno/v4/modules/bank/source/remote"
@@ -32,29 +25,43 @@ import (
 	govsource "github.com/forbole/bdjuno/v4/modules/gov/source"
 	localgovsource "github.com/forbole/bdjuno/v4/modules/gov/source/local"
 	remotegovsource "github.com/forbole/bdjuno/v4/modules/gov/source/remote"
-	inflationsource "github.com/forbole/bdjuno/v4/modules/inflation/source"
-	localinflationsource "github.com/forbole/bdjuno/v4/modules/inflation/source/local"
-	remoteinflationsource "github.com/forbole/bdjuno/v4/modules/inflation/source/remote"
+	vgtypes "github.com/evmos/evmos/v12/x/virtualgroup/types"
 	mintsource "github.com/forbole/bdjuno/v4/modules/mint/source"
 	localmintsource "github.com/forbole/bdjuno/v4/modules/mint/source/local"
 	remotemintsource "github.com/forbole/bdjuno/v4/modules/mint/source/remote"
+	permissionsource "github.com/forbole/bdjuno/v4/modules/permission/source"
+	remotepermissionsource "github.com/forbole/bdjuno/v4/modules/permission/source/remote"
+	permissiontypes "github.com/evmos/evmos/v12/x/permission/types"
 	slashingsource "github.com/forbole/bdjuno/v4/modules/slashing/source"
 	localslashingsource "github.com/forbole/bdjuno/v4/modules/slashing/source/local"
 	remoteslashingsource "github.com/forbole/bdjuno/v4/modules/slashing/source/remote"
+	spsource "github.com/forbole/bdjuno/v4/modules/sp/source"
+	remotespsource "github.com/forbole/bdjuno/v4/modules/sp/source/remote"
+	sptypes "github.com/evmos/evmos/v12/x/sp/types"
 	stakingsource "github.com/forbole/bdjuno/v4/modules/staking/source"
 	localstakingsource "github.com/forbole/bdjuno/v4/modules/staking/source/local"
 	remotestakingsource "github.com/forbole/bdjuno/v4/modules/staking/source/remote"
+	storagesource "github.com/forbole/bdjuno/v4/modules/storage/source"
+	remotestoragesource "github.com/forbole/bdjuno/v4/modules/storage/source/remote"
+	storagetypes "github.com/evmos/evmos/v12/x/storage/types"
+	vgsource "github.com/forbole/bdjuno/v4/modules/virtualgroup/source"
+	remotevgsource "github.com/forbole/bdjuno/v4/modules/virtualgroup/source/remote"
 	nodeconfig "github.com/forbole/juno/v5/node/config"
+	"github.com/forbole/juno/v5/node/local"
+	"github.com/forbole/juno/v5/node/remote"
 )
 
 type Sources struct {
-	BankSource      banksource.Source
-	DistrSource     distrsource.Source
-	GovSource       govsource.Source
-	InflationSource inflationsource.Source
-	MintSource      mintsource.Source
-	SlashingSource  slashingsource.Source
-	StakingSource   stakingsource.Source
+	BankSource       banksource.Source
+	DistrSource      distrsource.Source
+	GovSource  govsource.Source
+	MintSource mintsource.Source
+	SlashingSource   slashingsource.Source
+	StakingSource    stakingsource.Source
+	StorageSource    storagesource.Source
+	SpSource         spsource.Source
+	VGSource         vgsource.Source
+	PermissionSource permissionsource.Source
 }
 
 func BuildSources(nodeCfg nodeconfig.Config, encodingConfig *params.EncodingConfig) (*Sources, error) {
@@ -76,18 +83,17 @@ func buildLocalSources(cfg *local.Details, encodingConfig *params.EncodingConfig
 	}
 
 	app := evmosapp.NewEvmos(
-		log.NewTMLogger(log.NewSyncWriter(os.Stdout)), source.StoreDB, nil, true, map[int64]bool{},
-		cfg.Home, 0, params.MakeTestEncodingConfig(), nil, nil,
+		log.NewNopLogger(), source.StoreDB, nil, true, map[int64]bool{},
+		cfg.Home, 0, nil, nil, nil,
 	)
 
 	sources := &Sources{
 		BankSource:      localbanksource.NewSource(source, banktypes.QueryServer(app.BankKeeper)),
 		DistrSource:     localdistrsource.NewSource(source, distrkeeper.Querier{Keeper: app.DistrKeeper}),
-		GovSource:       localgovsource.NewSource(source, govtypesv1.QueryServer(app.GovKeeper), nil),
-		InflationSource: localinflationsource.NewSource(source, inflationtypes.QueryServer(app.InflationKeeper)),
-		MintSource:      localmintsource.NewSource(source, minttypes.QueryServer(nil)), // no MintKeeper available in evmosApp
+		GovSource:  localgovsource.NewSource(source, govkeeper.NewQueryServer(&app.GovKeeper), nil),
+		MintSource: localmintsource.NewSource(source, minttypes.QueryServer(nil)), // no MintKeeper available in evmosApp
 		SlashingSource:  localslashingsource.NewSource(source, slashingtypes.QueryServer(app.SlashingKeeper)),
-		StakingSource:   localstakingsource.NewSource(source, stakingkeeper.Querier{Keeper: &app.StakingKeeper}),
+		StakingSource:   localstakingsource.NewSource(source, stakingkeeper.Querier{Keeper: app.StakingKeeper}),
 	}
 
 	// Mount and initialize the stores
@@ -123,10 +129,25 @@ func buildRemoteSources(cfg *remote.Details) (*Sources, error) {
 	return &Sources{
 		BankSource:      remotebanksource.NewSource(source, banktypes.NewQueryClient(source.GrpcConn)),
 		DistrSource:     remotedistrsource.NewSource(source, distrtypes.NewQueryClient(source.GrpcConn)),
-		GovSource:       remotegovsource.NewSource(source, govtypesv1.NewQueryClient(source.GrpcConn), govtypesv1beta1.NewQueryClient(source.GrpcConn)),
-		InflationSource: remoteinflationsource.NewSource(source, inflationtypes.NewQueryClient(source.GrpcConn)),
-		MintSource:      remotemintsource.NewSource(source, minttypes.NewQueryClient(source.GrpcConn)),
+		GovSource:  remotegovsource.NewSource(source, govtypesv1.NewQueryClient(source.GrpcConn), govtypesv1beta1.NewQueryClient(source.GrpcConn)),
+		MintSource: remotemintsource.NewSource(source, minttypes.NewQueryClient(source.GrpcConn)),
 		SlashingSource:  remoteslashingsource.NewSource(source, slashingtypes.NewQueryClient(source.GrpcConn)),
 		StakingSource:   remotestakingsource.NewSource(source, stakingtypes.NewQueryClient(source.GrpcConn)),
+		StorageSource: remotestoragesource.NewSource(
+			source,
+			storagetypes.NewQueryClient(source.GrpcConn),
+		),
+		SpSource: remotespsource.NewSource(
+			source,
+			sptypes.NewQueryClient(source.GrpcConn),
+		),
+		VGSource: remotevgsource.NewSource(
+			source,
+			vgtypes.NewQueryClient(source.GrpcConn),
+		),
+		PermissionSource: remotepermissionsource.NewSource(
+			source,
+			permissiontypes.NewQueryClient(source.GrpcConn),
+		),
 	}, nil
 }

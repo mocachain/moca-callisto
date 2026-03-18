@@ -39,19 +39,24 @@ func (m *Module) HandleGenesis(doc *tmtypes.GenesisDoc, appState map[string]json
 		return fmt.Errorf("error while storing genesis transactions: %s", err)
 	}
 
+	// Convert []Validator to Validators struct
+	validators := stakingtypes.Validators{
+		Validators: genState.Validators,
+	}
+
 	// Save the validators
-	err = m.saveValidators(doc, genState.Validators)
+	err = m.saveValidators(doc, validators)
 	if err != nil {
 		return fmt.Errorf("error while storing staking genesis validators: %s", err)
 	}
 
 	// Save the description
-	err = m.saveValidatorDescription(doc, genState.Validators)
+	err = m.saveValidatorDescription(doc, validators)
 	if err != nil {
 		return fmt.Errorf("error while storing staking genesis validator descriptions: %s", err)
 	}
 
-	err = m.saveValidatorsCommissions(doc.InitialHeight, genState.Validators)
+	err = m.saveValidatorsCommissions(doc.InitialHeight, validators)
 	if err != nil {
 		return fmt.Errorf("error while storing staking genesis validators commissions: %s", err)
 	}
@@ -96,8 +101,8 @@ func (m *Module) parseGenesisTransactions(doc *tmtypes.GenesisDoc, appState map[
 
 // saveValidators stores the validators data present inside the given genesis state
 func (m *Module) saveValidators(doc *tmtypes.GenesisDoc, validators stakingtypes.Validators) error {
-	vals := make([]types.Validator, len(validators))
-	for i, val := range validators {
+	vals := make([]types.Validator, len(validators.Validators))
+	for i, val := range validators.Validators {
 		validator, err := m.convertValidator(doc.InitialHeight, val)
 		if err != nil {
 			return err
@@ -111,7 +116,7 @@ func (m *Module) saveValidators(doc *tmtypes.GenesisDoc, validators stakingtypes
 
 // saveValidatorDescription saves the description for the given validators
 func (m *Module) saveValidatorDescription(doc *tmtypes.GenesisDoc, validators stakingtypes.Validators) error {
-	for _, account := range validators {
+	for _, account := range validators.Validators {
 		description := m.convertValidatorDescription(
 			doc.InitialHeight,
 			account.OperatorAddress,
@@ -131,7 +136,7 @@ func (m *Module) saveValidatorDescription(doc *tmtypes.GenesisDoc, validators st
 
 // saveValidatorsCommissions save the initial commission for each validator
 func (m *Module) saveValidatorsCommissions(height int64, validators stakingtypes.Validators) error {
-	for _, account := range validators {
+	for _, account := range validators.Validators {
 		err := m.db.SaveValidatorCommission(types.NewValidatorCommission(
 			account.OperatorAddress,
 			&account.Commission.Rate,

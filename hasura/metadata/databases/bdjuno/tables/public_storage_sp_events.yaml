@@ -1,0 +1,11 @@
+table:
+  name: sp_events
+  schema: public
+
+select_permissions:
+  - role: anonymous
+    permission:
+      columns: "*"
+      filter: {}
+      limit: 100
+      allow_aggregations: true

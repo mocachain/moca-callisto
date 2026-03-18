@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:12
+    ports:
+      - "127.0.0.1:5432:5432"
+    restart: always
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ../../database/schema:/docker-entrypoint-initdb.d/
+    environment:
+      POSTGRES_DB: bdjuno
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres_moca"
+  graphql-engine:
+    image: hasura/graphql-engine:v2.22.1
+    ports:
+      - "8080:8080"
+    depends_on:
+      - "postgres"
+    restart: always
+    environment:
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: "anonymous"
+      ACTION_BASE_URL: "http://localhost:3000" ## 这里由于在容器里面启动得，所以要将localhost改为局域网地址
+      ## postgres database to store Hasura metadata
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres_moca@postgres:5432/bdjuno
+      ## this env var can be used to add the above postgres database to Hasura as a data source. this can be removed/updated based on your needs
+      PG_DATABASE_URL: postgres://postgres:postgres_moca@postgres:5432/bdjuno
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      ## set to "true" only after production queries are in hasura/metadata/query_collections.yaml
+      HASURA_GRAPHQL_ENABLE_ALLOWLIST: "false"
+      ## uncomment next line to run console offline (i.e load console assets from server instead of CDN)
+      # HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-moca}
+volumes:
+  db_data:
