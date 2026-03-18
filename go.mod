@@ -16,7 +16,7 @@ require (
 	github.com/ethereum/go-ethereum v1.15.5
 	github.com/evmos/evmos/v12 v12.0.0-alpha.1
 	github.com/forbole/juno/v5 v5.2.1-0.20230828165233-507db5ddc83d
-	github.com/go-co-op/gocron v1.33.1
+	github.com/go-co-op/gocron v1.37.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.4
