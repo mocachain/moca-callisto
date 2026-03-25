@@ -22,7 +22,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.12.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/prometheus/client_golang v1.20.5
 	github.com/proullon/ramsql v0.1.4
